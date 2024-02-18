@@ -1,0 +1,188 @@
+:root {
+    --padding: 10px;
+    --bordercolor: rgb(0, 0, 0);
+}
+
+body {
+    font-family: Inter;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0em;
+    text-align: left;
+}
+
+.main {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    margin: 20px;
+    gap: 10px;
+
+}
+
+.generic {
+    min-height: 25vw;
+    border-style: solid;
+    border-color: var(--bordercolor);
+    border-width: 1px;
+    border-radius: 3px;
+    box-shadow: 0px 5px 20px #00000005; 
+}
+
+.header {
+    position: sticky ;
+    z-index: 1;
+    top: 0;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter:blur(28.5px);
+    -webkit-backdrop-filter: blur(28.5px);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 30px ;
+}
+
+.form {
+    grid-column: 1/-1;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center; 
+    justify-content:space-between;
+    gap: 20px;
+    padding: 10px var(--padding);
+    border-color: var(--bordercolor);
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 3px;
+    box-shadow: 0px 5px 20px #00000005;
+
+}
+
+input[type="radio"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #fff;
+    margin: 0;
+  }
+
+  
+#rbDiv {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 100%;
+    gap: 12.5px;
+    flex-flow: row wrap;
+}
+
+#rb {
+    margin: -5px -5px;
+    width: 5px;
+    height: 5px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    padding: 10px;
+    border-style: solid;
+    border-radius: 50%;
+    border-width: 1px;
+    cursor: pointer;
+    scale: 1;
+    opacity: 1;
+    transition: 
+    opacity .2s ease-out,
+    scale .1s ;
+    
+
+  }
+
+/* hovered button*/
+#rb:hover {
+    
+    background-color: black;
+    color: #fff;
+    border-color: #fff;
+    opacity: 100%;
+    scale: 1.1;
+
+}
+/* not hovered but next to the hovered*/
+#rb:has(+ #rb:hover), #rb:hover + #rb {
+    opacity: 0.8;
+    scale: 1;
+  
+}
+/* not hovered and not next to the hovered*/
+#rbDiv:hover #rb:not(:hover, :has(+ #rb:hover) , #rb:hover + *){
+    opacity: 0.75;
+    scale: 0.95;
+    
+  }
+.inlineButton {
+    cursor: pointer;
+}
+
+.backText {
+    height: 27px;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: space-evenly;
+    position: relative;
+    gap: 0.5ch;
+}
+
+
+.timer {
+    margin-left: 1ch;
+    background: -webkit-linear-gradient(left, white 60%, black 60%);
+    border-radius: 100%;
+    height: 1.5rem;
+    width: 1.5rem;
+   
+    -webkit-animation: time calc(var(--duration) * 1s) steps(1000, start) infinite;
+      -webkit-mask: radial-gradient(transparent 60%,#000 60%);
+      mask: radial-gradient(transparent 60%,#000 60%);
+}
+.mask {
+    border-radius: 100% 0 0 100% / 50% 0 0 50%;
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 50%;
+    animation: mask calc(var(--duration) * 1s) steps(500, start) 0 infinite;
+    transform-origin: 100% 50%;
+    -webkit-animation: mask calc(var(--duration) * 1s) steps(500, start) infinite;
+    -webkit-transform-origin: 100% 50%;
+}
+@-webkit-keyframes time {
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+@-webkit-keyframes mask {
+    0% {
+        background: black;
+        -webkit-transform: rotate(0deg);
+    }
+    50% {
+        background: black;
+        -webkit-transform: rotate(-180deg);
+    }
+    50.01% {
+        background: white;
+        -webkit-transform: rotate(0deg);
+    }
+    100% {
+        background: white;
+        -webkit-transform: rotate(-180deg);
+    }
+}
+#userList{
+    width: 100%;
+ 
+}

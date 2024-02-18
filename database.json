@@ -1,0 +1,124 @@
+{
+	"users": [
+		{
+			"username": "user123",
+			"name": "John",
+			"surname": "Doe",
+			"rating": 3
+		},
+		{
+			"username": "randomUser",
+			"name": "Alice",
+			"surname": "Johnson",
+			"rating": 1
+		},
+		{
+			"username": "exampleUsername",
+			"name": "David",
+			"surname": "Smith",
+			"rating": 10
+		},
+		{
+			"username": "testUser",
+			"name": "Emily",
+			"surname": "Williams",
+			"rating": 10
+		},
+		{
+			"username": "awesomeCoder",
+			"name": "Michael",
+			"surname": "Brown",
+			"rating": 8
+		},
+		{
+			"username": "codingPro",
+			"name": "Sophia",
+			"surname": "Miller",
+			"rating": 3
+		},
+		{
+			"username": "techEnthusiast",
+			"name": "Daniel",
+			"surname": "Anderson",
+			"rating": 1
+		},
+		{
+			"username": "designMaster",
+			"name": "Olivia",
+			"surname": "Wilson",
+			"rating": 2
+		},
+		{
+			"username": "dataGeek",
+			"name": "Ethan",
+			"surname": "Johnson",
+			"rating": 4
+		},
+		{
+			"username": "codingNinja",
+			"name": "Ava",
+			"surname": "Davis",
+			"rating": 2
+		},
+		{
+			"username": "devWhiz",
+			"name": "Noah",
+			"surname": "Taylor",
+			"rating": 3
+		},
+		{
+			"username": "codeWizard",
+			"name": "Emma",
+			"surname": "Moore",
+			"rating": 6
+		},
+		{
+			"username": "programmerX",
+			"name": "Liam",
+			"surname": "Johnson",
+			"rating": 4
+		},
+		{
+			"username": "codingQueen",
+			"name": "Mia",
+			"surname": "Brown",
+			"rating": 8
+		},
+		{
+			"username": "codeGuru",
+			"name": "William",
+			"surname": "Anderson",
+			"rating": 9
+		},
+		{
+			"username": "developerPro",
+			"name": "Sophie",
+			"surname": "Miller",
+			"rating": 9
+		},
+		{
+			"username": "techMastermind",
+			"name": "Alexander",
+			"surname": "Williams",
+			"rating": 8
+		},
+		{
+			"username": "codingLegend",
+			"name": "Ella",
+			"surname": "Jones",
+			"rating": 4
+		},
+		{
+			"username": "dataWizard",
+			"name": "Benjamin",
+			"surname": "Davis",
+			"rating": 1
+		},
+		{
+			"username": "codeSavvy",
+			"name": "Grace",
+			"surname": "Taylor",
+			"rating": 2
+		}
+	]
+}
