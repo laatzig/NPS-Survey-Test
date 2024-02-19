@@ -1,0 +1,1 @@
+Requires go ini-reader (https://github.com/go-ini/ini)
