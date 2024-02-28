@@ -1,44 +1,27 @@
 package main
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"strconv"
-	"gopkg.in/ini.v1" //gopkg.in/ini.v1
 )
-var Port string;
-var Location string;
+
+var Location = "/Users/henrylaatzig/Desktop/Code/NPS/database.json"
 
 type Users struct {
 	Users []User `json:"users"`
 }
 
 type User struct {
-	UserID 	 *string `json:"userID"`
 	Username *string `json:"username"`
 	Name     *string `json:"name"`
 	Surname  *string `json:"surname"`
 	Rating   *int    `json:"rating"`
 }
 
-func openConfig (){
-	inidata, err1 := ini.Load("config.ini")
-	if err1 != nil {
-		fmt.Printf("Fail to read file: %v", err1)
-		os.Exit(1)
-	}
-	section := inidata.Section("http")
-		Port = ":" + section.Key("port").String();
-
-	section = inidata.Section("database.options")
-		Location = section.Key("location").String();
-		
-}
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
@@ -46,41 +29,16 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers")
 }
 
-func openData(location string) (interface{}, error) {
-
-	// Open the JSON file
-    jsonFile, err := os.Open(location)
-    if err != nil {
-        fmt.Println("Error opening file:", err)
-        return Users{}, err
-    }
-    defer jsonFile.Close()
-
-    // Get file stat to check if it's empty
-    fileInfo, err := jsonFile.Stat()
-    if err != nil {
-        fmt.Println("Error getting file info:", err)
-        return Users{}, err
-    }
-
-    if fileInfo.Size() == 0 {
-        fmt.Println("Error: JSON file is empty")
-        return Users{}, fmt.Errorf("JSON file is empty")
-    }
-
+func openData(location string) (data []byte) {
+	jsonFile, err := os.Open(Location)
+	if err != nil {
+		fmt.Println(err)
+		return data
+	}
+	fmt.Println("Successfully Opened " + Location + "/n")
 	byteValue, _ := io.ReadAll(jsonFile)
-	var jsonData , err1  = convertData(byteValue);
-	if err1 != nil {
-		fmt.Println("Error:", err1)
-		return nil , err1
-	}
-	
-	users, ok := jsonData.(Users);
-	if !ok{
-		return nil , fmt.Errorf("input is not of type Users")
-		
-	}
-	return users , nil
+	defer jsonFile.Close()
+	return byteValue
 }
 
 func saveData(data interface{}, location string) (confirm bool) {
@@ -93,45 +51,7 @@ func saveData(data interface{}, location string) (confirm bool) {
 	fmt.Println("Data changed @" + Location)
 	return
 }
-// Database Management Functions
 
-func generateUserIDs(data interface{}) (interface{}, error) {
-	users, ok := data.(Users);
-	if !ok{
-		return nil , fmt.Errorf("input is not of type Users")
-	}
-	var numEmptyID = 0;
-	for i, user := range users.Users {
-		if user.UserID == nil {
-			numEmptyID++;
-			generatedID := fmt.Sprintf("%s_%s", randomString(2) , fmt.Sprintf("%06d", i))
-			users.Users[i].UserID = &generatedID;
-		
-		}
-	}
-	if numEmptyID != 0 {
-		fmt.Println(" Empty UserIDs regenerated for ", strconv.Itoa(numEmptyID), " User") 
-	}
-	return users, nil
-}
-func randomString(length int) string {
-    
-    b := make([]byte, length+2)
-    rand.Read(b)
-    return fmt.Sprintf("%x", b)[2 : length+2]
-}
-
-func convertData (jsonData []byte) (interface{} , error){
-	var data Users;
-	err2 := json.Unmarshal(jsonData, &data)
-	if err2 != nil {
-		return nil, fmt.Errorf("input is not of type Users")
-	}
-
-	return data, nil
-}
-
-// Responses 
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("got / request\n")
 	io.WriteString(w, "digger was geht guck mal woanders hin!\n")
@@ -139,6 +59,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 
 func getUser(w http.ResponseWriter, r *http.Request) {
 
+	fmt.Printf("Got " + r.Method + " request for user\n")
 	enableCors(&w)
 	switch r.Method {
 	case "OPTIONS":
@@ -149,21 +70,15 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 
 		w.Header().Set("Content-Type", "application/json")
-		user , err   := openData(Location)
-		if err != nil {
-			fmt.Println(err)
-		}
-		b, ok := user.([]byte)
-		if ok {
-			http.Error(w, "Database Error", http.StatusInternalServerError)
-		}
-		w.Write(b)
+		user := openData(Location)
+		w.Write(user)
 
 	case "POST":
 	
 		d := json.NewDecoder(r.Body)
 		d.DisallowUnknownFields() // catch unwanted fields
 
+	// anonymous struct type: handy for one-time use
 	var NewData Users
 
 	err := d.Decode(&NewData)
@@ -179,53 +94,41 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	
 	}
 
+
+	// optional extra check
 	if d.More() {
     	http.Error(w, "extraneous data after JSON object", http.StatusBadRequest)
     return
 	}
 
+	
 	saveData(NewData, Location)
 		
+        
 	default:
 		fmt.Fprintf(w, "Sorry, only GET, POST and OPTIONS methods are supported.")
 	}
 }
 
 func main() {
+	// Loads and Unmarshalls Database
+	var data Users
+	json.Unmarshal(openData(Location), &data)
 
-	//Load Config
-	openConfig();
-
-	//Initialize and verify Database integrity
-	fmt.Println("OPENING ", Location)
-	var cleanData , err2  = openData(Location)
-	if err2 != nil {
-		fmt.Println("Error:", err2)
-		return
-	};
-	
-	fmt.Println("VERIFYING DATABASE INTEGRITY")
-	cleanData, err2 = generateUserIDs(cleanData)
-	if err2 != nil {
-		fmt.Println("Error:", err2)
-		return
-	};
-	saveData(cleanData, Location)
-	fmt.Println("INTEGRITY OK")
-	fmt.Println("Listening...")
-	
 	//Start a Server and Listen
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", getRoot)
 	mux.HandleFunc("/user", getUser)
 
-	err3 := http.ListenAndServe(Port, mux)
-	if errors.Is(err3, http.ErrServerClosed) {
+	err := http.ListenAndServe(":3333", mux)
+	if errors.Is(err, http.ErrServerClosed) {
 		fmt.Printf("server closed\n")
-	} else if err3 != nil {
-		fmt.Printf("error starting server: %s\n", err3)
+	} else if err != nil {
+		fmt.Printf("error starting server: %s\n", err)
 		os.Exit(1)
 	}
 
+	// Saves changed database Data
+	saveData(data, Location)
 
 }

@@ -3,12 +3,24 @@ const seed = Math.random();
 
 // 2. Set Header Name
 
+async function getData() {
+    const response = await fetch("http://localhost:3333/user",{
+        method: 'GET',
+        mode: 'cors'
+
+    });
+    const data = await response.json();
+    return data
+    
+}
+
 document.addEventListener("DOMContentLoaded", (event) => getData().then((response) => {
 
     const userNumber = Math.floor(seed * response.users.length);
     document.getElementById("header").innerHTML = "Hi "+ response.users[userNumber].name +"! Willkommen zurück zu PantWhere.";
    
 }));
+
 
 
 // 3. Make Field Labels
@@ -115,13 +127,34 @@ function dialogConfirmTimer(elem,value) {
 }   
 
 function endNPS(value) {
-    getData().then((response) => {
-        const userNumber = Math.floor(seed * response.users.length);
-        response.users[userNumber].rating = parseInt(value); 
-        saveData(response);
-        });
+    pushValue(value);
     const nPSFormDiv = document.getElementById( 'form' );
     nPSFormDiv.remove();
+}
+
+ async function pushValue(result) {
+    
+        getData().then((response) => {
+
+            const userNumber = Math.floor(seed * response.users.length);
+            response.users[userNumber].rating = parseInt(result); 
+            async function sendToFile() {
+             await fetch("http://localhost:3333/user",{
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(response)
+                
+              })};
+            console.log(response)
+            sendToFile();
+           
+        })
+      
+       
+
+      
 }
 
 

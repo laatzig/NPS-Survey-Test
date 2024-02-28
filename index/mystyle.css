@@ -12,7 +12,7 @@ body {
     text-align: left;
 }
 
-.mainContent {
+.main {
     position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -184,38 +184,5 @@ input[type="radio"] {
 }
 #userList{
     width: 100%;
-    justify-content: left;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    font-weight: lighter;
-  
+ 
 }
-
-#npsScore {
-    line-height: 10rem;
-    max-height: 100%;
-    max-width: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10rem;
-    font-weight: bold;
-
-}
-
-#tdNum {
-    text-align: center;
-    padding: 5px 10px;
-}
-
-#userList {
-    padding: 30px;
-
-}
-
-td{
-    padding: 10px 0px;
-    text-align: left;
-}
-
