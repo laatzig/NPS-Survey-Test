@@ -1,12 +1,12 @@
 // 1. Randomly Select User
 const seed = Math.random();
+var userID ;
 
 // 2. Set Header Name
 
-document.addEventListener("DOMContentLoaded", (event) => getData().then((response) => {
-
-    const userNumber = Math.floor(seed * response.users.length);
-    document.getElementById("header").innerHTML = "Hi "+ response.users[userNumber].name +"! Willkommen zurück zu PantWhere.";
+document.addEventListener("DOMContentLoaded", (event) => getData("any").then((response) => {
+    userID = response.userID;
+    document.getElementById("header").innerHTML = "Hi "+ response.name +"! Willkommen zurück zu PantWhere.";
    
 }));
 
@@ -115,9 +115,9 @@ function dialogConfirmTimer(elem,value) {
 }   
 
 function endNPS(value) {
-    getData().then((response) => {
-        const userNumber = Math.floor(seed * response.users.length);
-        response.users[userNumber].rating = parseInt(value); 
+    getData(userID).then((response) => {
+       
+        response.rating = parseInt(value); 
         saveData(response);
         });
     const nPSFormDiv = document.getElementById( 'form' );

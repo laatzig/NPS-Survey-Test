@@ -5,39 +5,42 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
+	"gopkg.in/ini.v1" //gopkg.in/ini.v1
 	"io"
 	"net/http"
 	"os"
 	"strconv"
-	"gopkg.in/ini.v1" //gopkg.in/ini.v1
+	"time"
 )
-var Port string;
-var Location string;
+
+var Port string
+var Location string
 
 type Users struct {
 	Users []User `json:"users"`
 }
 
 type User struct {
-	UserID 	 *string `json:"userID"`
+	UserID   *string `json:"userID"`
 	Username *string `json:"username"`
 	Name     *string `json:"name"`
 	Surname  *string `json:"surname"`
 	Rating   *int    `json:"rating"`
 }
 
-func openConfig (){
+func openConfig() {
 	inidata, err1 := ini.Load("config.ini")
 	if err1 != nil {
 		fmt.Printf("Fail to read file: %v", err1)
 		os.Exit(1)
 	}
 	section := inidata.Section("http")
-		Port = ":" + section.Key("port").String();
+	Port = ":" + section.Key("port").String()
 
 	section = inidata.Section("database.options")
-		Location = section.Key("location").String();
-		
+	Location = section.Key("location").String()
+
 }
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -46,41 +49,41 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers")
 }
 
-func openData(location string) (interface{}, error) {
+func openData(location string) (Users, error) {
 
 	// Open the JSON file
-    jsonFile, err := os.Open(location)
-    if err != nil {
-        fmt.Println("Error opening file:", err)
-        return Users{}, err
-    }
-    defer jsonFile.Close()
+	jsonFile, err := os.Open(location)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return Users{}, err
+	}
+	defer jsonFile.Close()
 
-    // Get file stat to check if it's empty
-    fileInfo, err := jsonFile.Stat()
-    if err != nil {
-        fmt.Println("Error getting file info:", err)
-        return Users{}, err
-    }
+	// Get file stat to check if it's empty
+	fileInfo, err := jsonFile.Stat()
+	if err != nil {
+		fmt.Println("Error getting file info:", err)
+		return Users{}, err
+	}
 
-    if fileInfo.Size() == 0 {
-        fmt.Println("Error: JSON file is empty")
-        return Users{}, fmt.Errorf("JSON file is empty")
-    }
+	if fileInfo.Size() == 0 {
+		fmt.Println("Error: JSON file is empty")
+		return Users{}, fmt.Errorf("JSON file is empty")
+	}
 
 	byteValue, _ := io.ReadAll(jsonFile)
-	var jsonData , err1  = convertData(byteValue);
+	var jsonData, err1 = convertData(byteValue)
 	if err1 != nil {
 		fmt.Println("Error:", err1)
-		return nil , err1
+		return Users{}, err1
 	}
-	
-	users, ok := jsonData.(Users);
-	if !ok{
-		return nil , fmt.Errorf("input is not of type Users")
-		
+
+	users, ok := jsonData.(Users)
+	if !ok {
+		return Users{}, fmt.Errorf("input is not of type Users")
+
 	}
-	return users , nil
+	return users, nil
 }
 
 func saveData(data interface{}, location string) (confirm bool) {
@@ -93,36 +96,34 @@ func saveData(data interface{}, location string) (confirm bool) {
 	fmt.Println("Data changed @" + Location)
 	return
 }
+
 // Database Management Functions
 
-func generateUserIDs(data interface{}) (interface{}, error) {
-	users, ok := data.(Users);
-	if !ok{
-		return nil , fmt.Errorf("input is not of type Users")
-	}
-	var numEmptyID = 0;
-	for i, user := range users.Users {
+func generateUserIDs(data Users) (Users, error) {
+
+	var numEmptyID = 0
+	for i, user := range data.Users {
 		if user.UserID == nil {
-			numEmptyID++;
-			generatedID := fmt.Sprintf("%s_%s", randomString(2) , fmt.Sprintf("%06d", i))
-			users.Users[i].UserID = &generatedID;
-		
+			numEmptyID++
+			generatedID := fmt.Sprintf("%s%s", randomString(8), fmt.Sprintf("%06d", i))
+			data.Users[i].UserID = &generatedID
+
 		}
 	}
 	if numEmptyID != 0 {
-		fmt.Println(" Empty UserIDs regenerated for ", strconv.Itoa(numEmptyID), " User") 
+		fmt.Println(" Empty UserIDs regenerated for ", strconv.Itoa(numEmptyID), " User")
 	}
-	return users, nil
+	return data, nil
 }
 func randomString(length int) string {
-    
-    b := make([]byte, length+2)
-    rand.Read(b)
-    return fmt.Sprintf("%x", b)[2 : length+2]
+
+	b := make([]byte, length+2)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)[2 : length+2]
 }
 
-func convertData (jsonData []byte) (interface{} , error){
-	var data Users;
+func convertData(jsonData []byte) (interface{}, error) {
+	var data Users
 	err2 := json.Unmarshal(jsonData, &data)
 	if err2 != nil {
 		return nil, fmt.Errorf("input is not of type Users")
@@ -131,61 +132,134 @@ func convertData (jsonData []byte) (interface{} , error){
 	return data, nil
 }
 
-// Responses 
+// Responses
+func DerefString(s *string) string {
+	if s != nil {
+		return *s
+	}
+
+	return ""
+}
+
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("got / request\n")
 	io.WriteString(w, "digger was geht guck mal woanders hin!\n")
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
-
+	println(r.Method, " Request Received")
 	enableCors(&w)
+	vars := mux.Vars(r)
+	userID := vars["userID"]
+	users, err := openData(Location)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	switch r.Method {
+
 	case "OPTIONS":
 
 		w.WriteHeader(http.StatusOK)
 		return
 
 	case "GET":
-
 		w.Header().Set("Content-Type", "application/json")
-		user , err   := openData(Location)
-		if err != nil {
-			fmt.Println(err)
+		switch userID {
+		case "any":
+			var timeDigits = float64((time.Now().UnixNano()%1e7))/1e7
+			var randomUser = int(float64(len(users.Users))*timeDigits)
+		
+			for i, user := range users.Users {
+				
+				if i == randomUser{
+					
+					b, ok := json.Marshal(user)
+					if ok != nil {
+						http.Error(w, "Database Error", http.StatusInternalServerError)
+					}
+					w.Write(b)
+					return
+				}
+			}
+
+		default:
+			var matches = false
+			for _, user := range users.Users {
+				if DerefString(user.UserID) == userID {
+					matches = true
+					b, ok := json.Marshal(user)
+					if ok != nil {
+						http.Error(w, "Database Error", http.StatusInternalServerError)
+					}
+					w.Write(b)
+					return
+				}
+			}
+			if !matches {
+				http.Error(w, "UserID not in Dataset", http.StatusBadRequest)
+			}
+
 		}
-		b, ok := user.([]byte)
-		if ok {
-			http.Error(w, "Database Error", http.StatusInternalServerError)
-		}
-		w.Write(b)
 
 	case "POST":
-	
-		d := json.NewDecoder(r.Body)
-		d.DisallowUnknownFields() // catch unwanted fields
+		switch userID {
+		case "any":
+			d := json.NewDecoder(r.Body)
+			d.DisallowUnknownFields()
 
-	var NewData Users
+			var NewData Users
 
-	err := d.Decode(&NewData)
-	if err != nil {
-    	// bad JSON or unrecognized json field
-    	http.Error(w, err.Error(), http.StatusBadRequest)
-    return
-	}
+			err := d.Decode(&NewData)
+			if err != nil {
 
-	if NewData.Users == nil {
-    	http.Error(w, "missing field 'users' from JSON object", http.StatusBadRequest)
-    	return
-	
-	}
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 
-	if d.More() {
-    	http.Error(w, "extraneous data after JSON object", http.StatusBadRequest)
-    return
-	}
+			if NewData.Users == nil {
+				http.Error(w, "missing field 'users' from JSON object", http.StatusBadRequest)
+				return
 
-	saveData(NewData, Location)
-		
+			}
+
+			if d.More() {
+				http.Error(w, "extraneous data after JSON object", http.StatusBadRequest)
+				return
+			}
+
+			saveData(NewData, Location)
+
+		default:
+			d := json.NewDecoder(r.Body)
+			d.DisallowUnknownFields()
+
+			var NewData User
+			var matches = false
+
+			err := d.Decode(&NewData)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			if d.More() {
+				http.Error(w, "extraneous data after JSON object", http.StatusBadRequest)
+				return
+			}
+
+			for i, user := range users.Users {
+				if user.UserID == NewData.UserID {
+					users.Users[i] = NewData
+					matches = true
+				}
+			}
+			if !matches {
+				http.Error(w, "UserID not in Dataset", http.StatusBadRequest)
+			}
+			saveData(users, Location)
+		}
+
 	default:
 		fmt.Fprintf(w, "Sorry, only GET, POST and OPTIONS methods are supported.")
 	}
@@ -194,38 +268,37 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	//Load Config
-	openConfig();
+	openConfig()
 
 	//Initialize and verify Database integrity
 	fmt.Println("OPENING ", Location)
-	var cleanData , err2  = openData(Location)
+	var cleanData, err2 = openData(Location)
 	if err2 != nil {
 		fmt.Println("Error:", err2)
 		return
-	};
-	
+	}
+
 	fmt.Println("VERIFYING DATABASE INTEGRITY")
 	cleanData, err2 = generateUserIDs(cleanData)
 	if err2 != nil {
 		fmt.Println("Error:", err2)
 		return
-	};
+	}
 	saveData(cleanData, Location)
 	fmt.Println("INTEGRITY OK")
 	fmt.Println("Listening...")
-	
-	//Start a Server and Listen
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", getRoot)
-	mux.HandleFunc("/user", getUser)
 
-	err3 := http.ListenAndServe(Port, mux)
+	//Start a Server and Listen
+	r := mux.NewRouter()
+	r.HandleFunc("/", getRoot)
+	r.HandleFunc("/user/{userID}", getUser)
+
+	err3 := http.ListenAndServe(Port, r)
 	if errors.Is(err3, http.ErrServerClosed) {
 		fmt.Printf("server closed\n")
 	} else if err3 != nil {
 		fmt.Printf("error starting server: %s\n", err3)
 		os.Exit(1)
 	}
-
 
 }
