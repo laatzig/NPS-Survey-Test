@@ -132,7 +132,6 @@ func convertData(jsonData []byte) (interface{}, error) {
 	return data, nil
 }
 
-// Responses
 func DerefString(s *string) string {
 	if s != nil {
 		return *s
@@ -140,6 +139,10 @@ func DerefString(s *string) string {
 
 	return ""
 }
+
+
+// Responses
+
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("got / request\n")
@@ -165,7 +168,9 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 
 	case "GET":
 		w.Header().Set("Content-Type", "application/json")
+
 		switch userID {
+
 		case "any":
 			var timeDigits = float64((time.Now().UnixNano()%1e7))/1e7
 			var randomUser = int(float64(len(users.Users))*timeDigits)
@@ -182,6 +187,14 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
+
+		case "all":
+			b, ok := json.Marshal(users)
+					if ok != nil {
+						http.Error(w, "Database Error", http.StatusInternalServerError)
+					}
+					w.Write(b)
+					return
 
 		default:
 			var matches = false
@@ -292,6 +305,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", getRoot)
 	r.HandleFunc("/user/{userID}", getUser)
+	
 
 	err3 := http.ListenAndServe(Port, r)
 	if errors.Is(err3, http.ErrServerClosed) {

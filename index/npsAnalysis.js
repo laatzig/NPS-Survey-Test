@@ -1,5 +1,5 @@
 
-document.addEventListener("DOMContentLoaded", (event) => getData().then((response) => {
+document.addEventListener("DOMContentLoaded", (event) => getData("all").then((response) => {
    
     var low = 6;
     var medium =9;

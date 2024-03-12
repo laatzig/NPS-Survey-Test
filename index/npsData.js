@@ -8,6 +8,7 @@ case "any":
     });
     var data = await response.json();
     return data
+    
 default: 
     var response = await fetch(`http://localhost:3333/user/${userID}`,{
         method: 'GET',
