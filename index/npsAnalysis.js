@@ -9,6 +9,10 @@ document.addEventListener("DOMContentLoaded", (event) => getData("all").then((re
     var passive = 0;
     var promoters = 0;
     var npsScore=0;
+    const ratingArray = []
+    for (var i=0; i<high; i++){
+        ratingArray[i]=0
+    }
     var userList = document.getElementById("userList");
     var ratingsList = document.getElementById("ratingsList")
     ratingsList.append(document.createElement("tr"),document.createElement("tr"),document.createElement("tr"));
@@ -20,14 +24,10 @@ document.addEventListener("DOMContentLoaded", (event) => getData("all").then((re
         var num = document.createElement("th");
             num.innerHTML = 0;
             num.id = "tdNum";
-            num.style = "font-size: 2rem;"
-        var use = document.createElement("td");
-            use.innerHTML = "Users";
-            use.id = "tdNum"
-            use.style = "font-weight: bold;"
+            num.style = "font-size: 1.2rem;"
+       
         ratingsList.children.item(2).append(rat);
-        ratingsList.children.item(1).append(use)
-        ratingsList.children.item(0).append(num);
+        // ratingsList.children.item(0).append(num);
         
     
     }
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", (event) => getData("all").then((re
 
         var rating = document.createElement('td');
         userRating = response.users[i].rating;
-        ratingsList.children.item(0).children.item(userRating-1).innerHTML++
+        ratingArray[userRating-1]++
         if(userRating != null){
                 
                 rating.innerHTML = response.users[i].rating;
@@ -64,12 +64,51 @@ document.addEventListener("DOMContentLoaded", (event) => getData("all").then((re
 
 
     }
-    
+
+
+    ratingArray.forEach((value, index)=>{ 
+        var tableDiv = ratingsList.children.item(0)
+       // var numberDiv = tableDiv.children.item(index)
+       // numberDiv.innerHTML = value;
+    })
+
     var pP= Math.round((total - (passive+detractors))/total * 100) 
     var pD= Math.round((total - (passive+promoters))/total *100)
     npsScore = pP-pD;
+
     div = document.getElementById("npsScore").innerHTML = npsScore;
-    
+
+
+
+function createBar(value,maxHeight) {
+    const barContainer = document.createElement("td");
+    const barDiv = document.createElement("div");
+    const barCircle = document.createElement("div")
+    barDiv.classList.add("bar");
+    barDiv.style.height = (100*value/maxHeight) + "%"; 
+    barDiv.append(barCircle)
+    barContainer.classList.add("chart")
+    barContainer.append(barDiv)
+    barCircle.classList.add("barCircle")
+ 
+    return barContainer;
+   
+}
+
+
+function createBarChart() {
+    const chartContainer = document.createElement("tr");
+    chartContainer.innerHTML = "";
+    maxHeight = Math.max(...ratingArray)
+    console.log(maxHeight)
+    ratingsList.insertBefore(chartContainer,ratingsList.children.item(0))
+    ratingArray.forEach((value,index) => {
+        const bar = createBar(value,maxHeight);
+        chartContainer.appendChild(bar)
+    });
+}
+
+createBarChart();
 
         
 }));
